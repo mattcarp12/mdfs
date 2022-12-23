@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis
+
+  chunkmaster:
+    build:
+      context: .
+      dockerfile: ./cmd/chunkmaster/Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_ADDR=redis:6379
+    ports:
+      - "8845:8845"
+    volumes:
+      - .:/app
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/go/bin/grpc_health_probe",
+          "-addr=localhost:8845"
+        ]
+      interval: 10s
+      timeout: 10s
+
+  chunkhoarder:
+    build:
+      context: .
+      dockerfile: ./cmd/chunkhoarder/Dockerfile
+    depends_on:
+      - chunkmaster
+    environment:
+      - CHUNKMASTER_ADDR=chunkmaster:8845
+      - CHUNK_DIR=/chunks
+    volumes:
+      - .:/app
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/go/bin/grpc_health_probe",
+          "-addr=localhost:8847"
+        ]
+      interval: 10s
+      timeout: 10s
+    scale: 3

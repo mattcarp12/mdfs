@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package ChunkMaster;
+option go_package = "github.com/mattcarp12/mdfs/mdfs-grpc";
+
+service ChunkMasterService {
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+    rpc List(ListRequest) returns (ListResponse);
+    rpc GetFileChunks (File) returns (Chunks);
+}
+
+message HeartbeatRequest {
+    string name = 1;
+    uint64 clock = 2;
+    FsMeta fsMeta = 3;
+}
+
+message FsMeta {
+    uint64 freeBytes = 1;
+    uint64 numChunks = 2;
+}
+
+message HeartbeatResponse {
+    uint64 clock = 1;
+}
+
+message ListRequest {
+    string prefix = 1;
+}
+
+message ListResponse {
+    repeated FileMetadata files = 1; 
+}
+
+message FileMetadata {
+    string name = 1;
+}
+
+message File {
+    string filename = 1;
+}
+
+message Chunk {
+    string chunkID = 1;
+}
+
+message Chunks {
+    repeated Chunk chunks = 1;
+} 
+
+message Empty {}
+
+service ChunkHoarderService {
+    rpc GetChunk(GetChunkRequest) returns (GetChunkResponse);
+    rpc PutChunk(PutChunkRequest) returns (PutChunkResponse);
+    rpc ListChunks(Empty) returns (Chunks);
+}
+
+message GetChunkRequest {
+    string chunkID = 1;
+}
+
+message GetChunkResponse {
+    string chunkID = 1;
+    bytes data = 2;
+}
+
+message PutChunkRequest {
+    bytes data = 1;
+}
+
+message PutChunkResponse {
+    string chunkID = 1;
+}
